@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "encoding/json"
 	"log"
 	"rabbitmq/pkg"
 
@@ -13,7 +12,8 @@ func main() {
 		url := pkg.ReceiveFromQueue("tasks")
 		output := Collect(url)
 
-		pkg.SendToQueue("tasks_queue", output.title)
+		pkg.SendToQueue(output.title)
+		pkg.SendToQueue(output.url)
 	}
 }
 

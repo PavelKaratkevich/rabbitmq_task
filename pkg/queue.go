@@ -6,7 +6,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func SendToQueue(queueName string, URL string) {
+func SendToQueue(URL string) {
 
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
@@ -16,19 +16,29 @@ func SendToQueue(queueName string, URL string) {
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	q, err := ch.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+	err = ch.ExchangeDeclare(
+		"urls",   // name
+		"fanout", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
 	)
-	failOnError(err, "Failed to declare a queue")
+
+	// q, err := ch.QueueDeclare(
+	// 	queueName, // name
+	// 	true,      // durable
+	// 	false,     // delete when unused
+	// 	false,     // exclusive
+	// 	false,     // no-wait
+	// 	nil,       // arguments
+	// )
+	// failOnError(err, "Failed to declare a queue")
 
 	err = ch.Publish(
-		"",     // exchange
-		q.Name, // routing key
+		"urls", // exchange
+		"",     // routing key
 		false,  // mandatory
 		false,
 		amqp.Publishing{
@@ -53,13 +63,24 @@ func ReceiveFromQueue(queueName string) string {
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
+	err = ch.ExchangeDeclare(
+		"urls",   // name
+		"fanout", // type
+		true,     // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+	failOnError(err, "Failed to declare an exchange")
+
 	q, err := ch.QueueDeclare(
-		queueName, // name
-		true,      // durable
-		false,     // delete when unused
-		false,     // exclusive
-		false,     // no-wait
-		nil,       // arguments
+		"",    // name
+		true,  // durable
+		false, // delete when unused
+		false, // exclusive
+		false, // no-wait
+		nil,   // arguments
 	)
 	failOnError(err, "Failed to declare a queue")
 
@@ -69,6 +90,15 @@ func ReceiveFromQueue(queueName string) string {
 		false, // global
 	)
 	failOnError(err, "Failed to set QoS")
+
+	err = ch.QueueBind(
+		q.Name, // queue name
+		"",     // routing key
+		"urls", // exchange
+		false,
+		nil,
+)
+failOnError(err, "Failed to bind a queue")
 
 	msgs, err := ch.Consume(
 		q.Name, // queue
@@ -88,13 +118,13 @@ func ReceiveFromQueue(queueName string) string {
 			log.Printf("Received a url address: %s", d.Body)
 
 			d.Ack(false)
-			
+
 			forever <- string(d.Body)
 		}
 	}()
 
 	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	url = <- forever
+	url = <-forever
 
 	return url
 }

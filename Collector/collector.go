@@ -10,12 +10,13 @@ import (
 
 func main() {
 
-   urls := Collect("https://go.dev/", 2)
-	
-   for _, url := range urls {
-     pkg.SendToQueue("tasks", url)
-   }
-}
+		urls := Collect("https://go.dev/", 1)
+
+		for _, url := range urls {
+			pkg.SendToQueue(url)
+		}
+	}
+
 
 func Collect(url string, depth int) []string {
 

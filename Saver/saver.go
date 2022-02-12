@@ -7,11 +7,20 @@ import (
 )
 
 func main() {
-	var url string
-	for {
-		url = pkg.ReceiveFromQueue("tasks_queue")
+	f, err := os.Create("output.txt")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
 
-		log.Printf("Output: %v", url)
-		os.WriteFile("output.txt", []byte(url), 0666)
+	for {
+		out := pkg.ReceiveFromQueue("urls")
+
+		log.Printf("Output: %v", out)
+
+		_, err2 := f.WriteString(out)
+		if err2 != nil {
+			log.Fatal(err2)
+		}
 	}
 }

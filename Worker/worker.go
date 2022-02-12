@@ -9,11 +9,10 @@ import (
 
 func main() {
 	for {
-		url := pkg.ReceiveFromQueue("tasks")
+		url := pkg.ReceiveFromQueue("url")
 		output := Collect(url)
 
-		pkg.SendToQueue(output.title)
-		pkg.SendToQueue(output.url)
+		pkg.SendToQueue("urls", output.url + "\n" + output.title + "\n")
 	}
 }
 

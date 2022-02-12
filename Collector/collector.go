@@ -10,17 +10,18 @@ import (
 
 func main() {
 
-		urls := Collect("https://go.dev/", 1)
+	c := make(chan string)
 
-		for _, url := range urls {
-			pkg.SendToQueue(url)
-		}
+	go Collect("https://go.dev/", 2, c)
+	
+	for {
+		pkg.SendToQueue("url", <-c)
 	}
+}
 
+func Collect(url string, depth int, m chan string) {
 
-func Collect(url string, depth int) []string {
-
-	var URLs []string
+	var URL string
 
 	c := colly.NewCollector(
 		colly.MaxDepth(depth),
@@ -33,10 +34,10 @@ func Collect(url string, depth int) []string {
 	c.OnRequest(func(r *colly.Request) {
 
 		fmt.Println("Collecting:", r.URL)
-		URLs = append(URLs, r.URL.String())
+		URL = r.URL.String()
+		m <- URL
 	})
 
 	c.Visit(url)
 
-	return URLs
 }

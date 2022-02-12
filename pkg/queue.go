@@ -6,7 +6,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-func SendToQueue(URL string) {
+func SendToQueue(name string, URL string) {
 
 	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 	failOnError(err, "Failed to connect to RabbitMQ")
@@ -17,7 +17,7 @@ func SendToQueue(URL string) {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"urls",   // name
+		name,     // name
 		"fanout", // type
 		true,     // durable
 		false,    // auto-deleted
@@ -37,9 +37,9 @@ func SendToQueue(URL string) {
 	// failOnError(err, "Failed to declare a queue")
 
 	err = ch.Publish(
-		"urls", // exchange
-		"",     // routing key
-		false,  // mandatory
+		name,  // exchange
+		"",    // routing key
+		false, // mandatory
 		false,
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
@@ -64,13 +64,13 @@ func ReceiveFromQueue(queueName string) string {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		"urls",   // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
+		queueName, // name
+		"fanout",  // type
+		true,      // durable
+		false,     // auto-deleted
+		false,     // internal
+		false,     // no-wait
+		nil,       // arguments
 	)
 	failOnError(err, "Failed to declare an exchange")
 
@@ -92,13 +92,13 @@ func ReceiveFromQueue(queueName string) string {
 	failOnError(err, "Failed to set QoS")
 
 	err = ch.QueueBind(
-		q.Name, // queue name
-		"",     // routing key
-		"urls", // exchange
+		q.Name,    // queue name
+		"",        // routing key
+		queueName, // exchange
 		false,
 		nil,
-)
-failOnError(err, "Failed to bind a queue")
+	)
+	failOnError(err, "Failed to bind a queue")
 
 	msgs, err := ch.Consume(
 		q.Name, // queue

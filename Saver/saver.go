@@ -14,11 +14,12 @@ func main() {
 		defer f.Close()
 
 	for {
-		out := pkg.ReceiveFromQueue("urls")
+		url := pkg.ReceiveFromQueue("url")
+		title := pkg.ReceiveFromQueue("title")
 
-		log.Printf("Output: %v", out)
+		log.Printf("Output: %v, %v", url, title)
 
-		_, err2 := f.WriteString(out)
+		_, err2 := f.WriteString("\n" + url + "\n" + title + "\n")
 		if err2 != nil {
 			log.Fatal(err2)
 		}

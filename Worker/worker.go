@@ -7,18 +7,19 @@ import (
 	"github.com/gocolly/colly"
 )
 
+type page struct {
+	url   string
+	title string
+}
+
 func main() {
 	for {
 		url := pkg.ReceiveFromQueue("url")
 		output := Collect(url)
 
-		pkg.SendToQueue("urls", output.url + "\n" + output.title + "\n")
+		pkg.SendToQueue("url", output.url)
+		pkg.SendToQueue("title", output.title)
 	}
-}
-
-type page struct {
-	url   string
-	title string
 }
 
 func Collect(url string) page {

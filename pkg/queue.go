@@ -17,29 +17,19 @@ func SendToQueue(name string, URL string) {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		name,     // name
-		"fanout", // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
+		"url_exchange", // name
+		"direct",       // type
+		true,           // durable
+		false,          // auto-deleted
+		false,          // internal
+		false,          // no-wait
+		nil,            // arguments
 	)
 
-	// q, err := ch.QueueDeclare(
-	// 	queueName, // name
-	// 	true,      // durable
-	// 	false,     // delete when unused
-	// 	false,     // exclusive
-	// 	false,     // no-wait
-	// 	nil,       // arguments
-	// )
-	// failOnError(err, "Failed to declare a queue")
-
 	err = ch.Publish(
-		name,  // exchange
-		"",    // routing key
-		false, // mandatory
+		"url_exchange", // exchange
+		name,           // routing key
+		false,          // mandatory
 		false,
 		amqp.Publishing{
 			DeliveryMode: amqp.Persistent,
@@ -64,13 +54,13 @@ func ReceiveFromQueue(queueName string) string {
 	defer ch.Close()
 
 	err = ch.ExchangeDeclare(
-		queueName, // name
-		"fanout",  // type
-		true,      // durable
-		false,     // auto-deleted
-		false,     // internal
-		false,     // no-wait
-		nil,       // arguments
+		"url_exchange", // name
+		"direct",       // type
+		true,           // durable
+		false,          // auto-deleted
+		false,          // internal
+		false,          // no-wait
+		nil,            // arguments
 	)
 	failOnError(err, "Failed to declare an exchange")
 
@@ -92,9 +82,9 @@ func ReceiveFromQueue(queueName string) string {
 	failOnError(err, "Failed to set QoS")
 
 	err = ch.QueueBind(
-		q.Name,    // queue name
-		"",        // routing key
-		queueName, // exchange
+		q.Name,         // queue name
+		queueName,      // routing key
+		"url_exchange", // exchange
 		false,
 		nil,
 	)
